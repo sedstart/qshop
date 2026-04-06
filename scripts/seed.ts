@@ -3,8 +3,8 @@ config({ path: ".env.local" });
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { users, accounts, products } from "../src/db/schema";
-import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
+import { hashPassword } from "better-auth/crypto";
 
 const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql);
@@ -689,7 +689,7 @@ async function upsertUser(user: {
     return;
   }
 
-  const hashedPassword = await bcrypt.hash(user.password, 10);
+  const hashedPassword = await hashPassword(user.password);
 
   await db.insert(users).values({
     id: user.id,
