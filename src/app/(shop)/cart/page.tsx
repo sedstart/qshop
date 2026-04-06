@@ -6,7 +6,6 @@ import { Trash2, Minus, Plus, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/components/cart/cart-context";
-import type { Metadata } from "next";
 
 export default function CartPage() {
   const { items, totalPrice, updateQty, removeItem, clearCart } = useCart();
@@ -35,7 +34,7 @@ export default function CartPage() {
             <div key={item.id} className="flex gap-4 p-4 border rounded-xl">
               <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                 {item.image ? (
-                  <Image src={item.image} alt={item.name} fill className="object-cover" />
+                  <Image src={item.image} alt={item.name} fill sizes="80px" className="object-cover" />
                 ) : (
                   <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
                     No img

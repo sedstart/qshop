@@ -14,6 +14,7 @@ export const products = pgTable("products", {
   images: text("images").array().notNull().default([]),
   category: text("category"),
   dodoProductId: text("dodo_product_id"),
+  chargebeeItemPriceId: text("chargebee_item_price_id"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

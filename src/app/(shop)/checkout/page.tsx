@@ -1,16 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+
+const GATEWAY_LABELS: Record<string, string> = {
+  chargebee: "Chargebee",
+  dodo: "DodoPayments",
+};
+const GATEWAY_LABEL =
+  GATEWAY_LABELS[process.env.NEXT_PUBLIC_PAYMENT_GATEWAY ?? "dodo"] ?? "DodoPayments";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { useCart } from "@/components/cart/cart-context";
 import { useSession } from "@/lib/auth-client";
 import { toast } from "sonner";
@@ -23,8 +28,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function CheckoutPage() {
-  const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, isPending: sessionLoading } = useSession();
   const { items, totalPrice, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
 
@@ -40,6 +44,10 @@ export default function CheckoutPage() {
         <Button asChild><Link href="/products">Shop now</Link></Button>
       </div>
     );
+  }
+
+  if (sessionLoading) {
+    return <div className="container mx-auto px-4 py-24 text-center text-muted-foreground">Loading…</div>;
   }
 
   if (!session) {
@@ -87,9 +95,9 @@ export default function CheckoutPage() {
         throw new Error(err.error ?? "Failed to create payment");
       }
 
-      const { data: { paymentUrl } } = await payRes.json();
+      const { data: { checkoutUrl } } = await payRes.json();
       clearCart();
-      window.location.href = paymentUrl;
+      window.location.href = checkoutUrl;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
       setLoading(false);
@@ -142,7 +150,7 @@ export default function CheckoutPage() {
               </Card>
 
               <Button type="submit" size="lg" className="w-full" disabled={loading}>
-                {loading ? "Redirecting to payment…" : "Pay with DodoPayments"}
+                {loading ? "Redirecting to payment…" : `Pay with ${GATEWAY_LABEL}`}
               </Button>
             </form>
           </Form>
