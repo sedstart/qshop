@@ -13,9 +13,6 @@ import {
 import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { signUp } from "@/lib/auth-client";
 import { toast } from "sonner";
 
@@ -23,7 +20,7 @@ const schema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  role: z.enum(["buyer", "seller"]),
+  wantToSell: z.boolean(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -34,7 +31,7 @@ export default function SignUpPage() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", email: "", password: "", role: "buyer" },
+    defaultValues: { name: "", email: "", password: "", wantToSell: false },
   });
 
   async function onSubmit(values: FormValues) {
@@ -44,7 +41,7 @@ export default function SignUpPage() {
       email: values.email,
       password: values.password,
       // @ts-expect-error — additional field passed through better-auth
-      role: values.role,
+      role: values.wantToSell ? "seller" : "buyer",
       callbackURL: "/",
     });
     setLoading(false);
@@ -79,7 +76,7 @@ export default function SignUpPage() {
     <Card className="w-full max-w-sm">
       <CardHeader>
         <CardTitle>Create an account</CardTitle>
-        <CardDescription>Join qshop as a buyer or seller</CardDescription>
+        <CardDescription>Create your account to start shopping</CardDescription>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -125,21 +122,20 @@ export default function SignUpPage() {
             />
             <FormField
               control={form.control}
-              name="role"
+              name="wantToSell"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>I want to</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select role" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="buyer">Buy products</SelectItem>
-                      <SelectItem value="seller">Sell products</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={field.onChange}
+                        className="h-4 w-4 rounded border border-input accent-foreground cursor-pointer"
+                      />
+                      <span className="text-sm">I also want to sell products</span>
+                    </label>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

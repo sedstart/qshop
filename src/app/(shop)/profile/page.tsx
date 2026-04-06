@@ -1,20 +1,38 @@
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "@/lib/auth-client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import type { Metadata } from "next";
+import { toast } from "sonner";
 
-export const metadata: Metadata = { title: "Profile" };
+export default function ProfilePage() {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const [upgrading, setUpgrading] = useState(false);
 
-export default async function ProfilePage() {
-  const session = await getSession();
-  if (!session) redirect("/sign-in");
+  type AuthUser = { id: string; name: string; email: string; emailVerified: boolean; role?: string };
+  const user = session?.user as AuthUser | undefined;
 
-  const { user } = session;
+  if (!user) return null;
+
+  async function becomeSeller() {
+    setUpgrading(true);
+    const res = await fetch("/api/users/me", { method: "PATCH" });
+    setUpgrading(false);
+    if (res.ok) {
+      toast.success("Your account now has seller access");
+      router.refresh();
+    } else {
+      const body = await res.json().catch(() => ({}));
+      toast.error(body.error ?? "Something went wrong");
+    }
+  }
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-lg">
@@ -59,6 +77,11 @@ export default async function ProfilePage() {
         {(user.role === "seller" || user.role === "admin") && (
           <Button variant="outline" asChild>
             <Link href="/seller">Seller dashboard</Link>
+          </Button>
+        )}
+        {user.role === "buyer" && (
+          <Button variant="outline" onClick={becomeSeller} disabled={upgrading}>
+            {upgrading ? "Upgrading…" : "Become a seller"}
           </Button>
         )}
       </div>
